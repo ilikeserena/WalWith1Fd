@@ -2,7 +2,8 @@
 #make --no-print-directory
 
 set -ve
-cd ../build
+mkdir -p build
+cd build
 cmake ../src
 make
 ./SQLiteTest
