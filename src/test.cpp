@@ -1,4 +1,5 @@
 #include "vfs.h"
+#include "procvfs.h"
 
 #include "sqlite3.h"
 
@@ -61,7 +62,8 @@ TEST(MyTest, MyTest)
 
   ASSERT_EQ(SQLITE_OK, sqlite3_config(SQLITE_CONFIG_LOG, logSqliteError, nullptr));
 
-  ASSERT_EQ(SQLITE_OK, sqlite3_vfs_register(sqlite3_demovfs(), 1));
+//  ASSERT_EQ(SQLITE_OK, sqlite3_vfs_register(sqlite3_demovfs(), 1));
+  ASSERT_EQ(SQLITE_OK, procvfs_init());
 
   printf("db1\n");
   Database db1(dbFile);
