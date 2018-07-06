@@ -7,7 +7,6 @@
 #include <mutex>
 
 // Config
-#define OS_VXWORKS 0
 #define SQLITE_OMIT_WSD
 #define SQLITE_DEBUG
 #ifndef SQLITE_POWERSAFE_OVERWRITE
@@ -21,7 +20,8 @@
 #define ALWAYS(X) (X)
 #define NEVER(X) (X)
 #define ArraySize(X) ((int)(sizeof(X) / sizeof(X[0])))
-#define OSTRACE(X)
+#define SQLITE_HAVE_OS_TRACE
+#define OSTRACE(X) printf X
 #ifndef SQLITE_DEFAULT_SECTOR_SIZE
 #define SQLITE_DEFAULT_SECTOR_SIZE 4096
 #endif
@@ -389,19 +389,8 @@ static struct unix_syscall
     {"stat", (sqlite3_syscall_ptr)stat, 0},
 #define osStat ((int (*)(const char *, struct stat *))aSyscall[4].pCurrent)
 
-/*
-** The DJGPP compiler environment looks mostly like Unix, but it
-** lacks the fcntl() system call.  So redefine fcntl() to be something
-** that always succeeds.  This means that locking does not occur under
-** DJGPP.  But it is DOS - what did you expect?
-*/
-#ifdef __DJGPP__
-    {"fstat", 0, 0},
-#define osFstat(a, b, c) 0
-#else
     {"fstat", (sqlite3_syscall_ptr)fstat, 0},
 #define osFstat ((int (*)(int, struct stat *))aSyscall[5].pCurrent)
-#endif
 
     {"ftruncate", (sqlite3_syscall_ptr)ftruncate, 0},
 #define osFtruncate ((int (*)(int, off_t))aSyscall[6].pCurrent)
@@ -1991,47 +1980,6 @@ static int unixClose(sqlite3_file *id)
 }
 
 /************** End of the posix advisory lock implementation *****************
-******************************************************************************/
-
-/******************************************************************************
-****************************** No-op Locking **********************************
-**
-** Of the various locking implementations available, this is by far the
-** simplest:  locking is ignored.  No attempt is made to lock the database
-** file for reading or writing.
-**
-** This locking mode is appropriate for use on read-only databases
-** (ex: databases that are burned into CD-ROM, for example.)  It can
-** also be used if the application employs some external mechanism to
-** prevent simultaneous access of the same database by two or more
-** database connections.  But there is a serious risk of database
-** corruption if this locking mode is used in situations where multiple
-** database connections are accessing the same database file at the same
-** time and one or more of those connections are writing.
-*/
-
-static int nolockCheckReservedLock(sqlite3_file *NotUsed, int *pResOut)
-{
-  UNUSED_PARAMETER(NotUsed);
-  *pResOut = 0;
-  return SQLITE_OK;
-}
-static int nolockLock(sqlite3_file *NotUsed, int NotUsed2)
-{
-  UNUSED_PARAMETER2(NotUsed, NotUsed2);
-  return SQLITE_OK;
-}
-static int nolockUnlock(sqlite3_file *NotUsed, int NotUsed2)
-{
-  UNUSED_PARAMETER2(NotUsed, NotUsed2);
-  return SQLITE_OK;
-}
-
-/*
-** Close the file.
-*/
-static int nolockClose(sqlite3_file *id) { return closeUnixFile(id); }
-/******************* End of the no-op lock implementation *********************
 ******************************************************************************/
 
 /******************************************************************************
@@ -5376,7 +5324,6 @@ int procvfs_init(void)
   {
     sqlite3_vfs_register(&aVfs[i], i == 0);
   }
-  //  unixBigLock = sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_VFS1);
   return SQLITE_OK;
 }
 
@@ -5389,6 +5336,5 @@ int procvfs_init(void)
 */
 int procvfs_close(void)
 {
-  //  unixBigLock = 0;
   return SQLITE_OK;
 }
