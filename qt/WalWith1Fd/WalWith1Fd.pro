@@ -17,10 +17,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     ../../src/test.cpp \
     ../../src/procvfs.cpp \
-    ../../src/sqlite3.c
+    ../../src/sqlite3.c \
+    ../../src/ProxyVfs.cpp
 
 HEADERS += \
     ../../src/sqlite3.h \
-    ../../src/procvfs.h
+    ../../src/procvfs.h \
+    ../../src/ProxyVfs.h
 
 LIBS += -lgtest_main -lgtest -lgmock -ldl
